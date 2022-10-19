@@ -7,7 +7,7 @@ const Product = require('./models/product');
 const Order = require('./models/order');
 
 // mongo setup
-const mongoDb = 'mongodb://127.0.0.1/mongoose-demo';
+const mongoDb = 'mongodb://127.0.0.1/mongoose-codealong';
 const PORT = 8000;
 mongoose.connect(mongoDb, {useNewUrlParser: true, useNewUrlParser: true});
 
@@ -34,18 +34,18 @@ post.save((err) => {
 // });
 
 
-const product = new Product({name: 'Wrench', price: 5});
-product.save();
-const order = new Order({buyer: 'tester', trackingNumber:"ABC123"})
-order.products.push(product)
-order.save();
+// const product = new Product({name: 'Wrench', price: 5});
+// product.save();
+// const order = new Order({buyer: 'tester', trackingNumber:"ABC123"})
+// order.products.push(product)
+// order.save();
 // fetch orders with products populated
 //mongoose.Types.ObjectId("634ae8e793d7c52c0dcc8e05")
-Order.findOne({}, (err, order) => {
-    Order.findById(order._id).populate('products').exec((err, order) => {
-        console.log(order);
-    });
-})
+// Order.findOne({}, (err, order) => {
+//     Order.findById(order._id).populate('products').exec((err, order) => {
+//         console.log(order);
+//     });
+// })
 // Order.findById(mongoose.Types.ObjectId("634ae8e793d7c52c0dcc8e05")).populate('products').exec((err, order) => {
 //     console.log(order);
 // });
@@ -56,6 +56,104 @@ db.once('open', function() {
 
 db.on('error', function(err) {
     console.error(`Database error:\n${err}`);
+});
+
+//Home Route
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Welcome to our API!'
+    })
+})
+
+// Users Route
+app.get('/users', (req, res) => {
+    User.find({})
+    .then(users => {
+        console.log('All users', users);
+        res.json({ users: users });
+    })
+    .catch(error => { 
+        console.log('error', error);
+        res.json({ message: "Error ocurred, please try again" });
+    });
+});
+
+// find by email
+app.get('/users/:email', (req, res) => {
+    console.log('find user by', req.params.email)
+    User.findOne({
+        email: req.params.email
+    })
+    .then(user => {
+        console.log('Here is the user', user.name);
+        res.json({ user: user });
+    })
+    .catch(error => { 
+        console.log('error', error);
+        res.json({ message: "Error ocurred, please try again" });
+    });
+});
+
+// Post for create
+app.post('/users', (req, res) => {
+    User.create({
+        name: req.body.name,
+        email: req.body.email,
+        meta: {
+            age: req.body.age,
+            website: req.body.website
+        }
+    })
+    .then(user => {
+        console.log('New user =>>', user);
+        res.json({ user: user });
+    })
+    .catch(error => { 
+        console.log('error', error) 
+        res.json({ message: "Error ocurred, please try again" })
+    });
+});
+
+app.put('/users/:email', (req, res) => {
+    console.log('route is being on PUT')
+    User.findOne({ email: req.params.email })
+    .then(foundUser => {
+        console.log('User found', foundUser);
+        User.findOneAndUpdate({ email: req.params.email }, 
+        { 
+            name: req.body.name ? req.body.name : foundUser.name,
+            email: req.body.email ? req.body.email : foundUser.email,
+            meta: {
+                age: req.body.age ? req.body.age : foundUser.age,
+                website: req.body.website ? req.body.website : foundUser.website
+            }
+        })
+        .then(user => {
+            console.log('User was updated', user);
+            res.json({ user: user })
+        })
+        .catch(error => {
+            console.log('error', error) 
+            res.json({ message: "Error ocurred, please try again" })
+        })
+    })
+    .catch(error => {
+        console.log('error', error) 
+        res.json({ message: "Error ocurred, please try again" })
+    })
+    
+});
+
+app.delete('/users/:email', (req, res) => {
+    User.findOneAndRemove({ email: req.params.email })
+    .then(response => {
+        console.log('This was delete', response);
+        res.json({ message: `${req.params.email} was deleted`});
+    })
+    .catch(error => {
+        console.log('error', error) 
+        res.json({ message: "Error ocurred, please try again" });
+    })
 });
 
 // create a new user called Chris
@@ -88,9 +186,9 @@ db.on('error', function(err) {
 // express setup
 app.use(express.urlencoded({ extended: false }));
 
-app.get('/', function(req, res) {
-    res.send(chris.sayHello());
-});
+// app.get('/', function(req, res) {
+//     res.send(chris.sayHello());
+// });
 
 
 // Find All
