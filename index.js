@@ -156,6 +156,65 @@ app.delete('/users/:email', (req, res) => {
     })
 });
 
+// ================ POSTS ROUTES ========================
+
+app.get('/posts', (req, res) => {
+    Post.find({})
+    .then(posts => {
+        console.log('All posts', posts);
+        res.json({ posts: posts });
+    })
+    .catch(error => { 
+        console.log('error', error) 
+    });
+});
+
+
+// ================ COMMENTS ROUTES ========================
+
+app.get('/comments', (req, res) => {
+    Comment.find({})
+    .then(comments => {
+        console.log('All comments', comments);
+        res.json({ comments: comments });
+    })
+    .catch(error => { 
+        console.log('error', error) 
+    });
+});
+
+
+// PUT Route for posts 
+app.put('/postssers/:email', (req, res) => {
+    console.log('route is being on PUT')
+    User.findOne({ email: req.params.email })
+    .then(foundUser => {
+        console.log('User found', foundUser);
+        User.findOneAndUpdate({ email: req.params.email }, 
+        { 
+            name: req.body.name ? req.body.name : foundUser.name,
+            email: req.body.email ? req.body.email : foundUser.email,
+            meta: {
+                age: req.body.age ? req.body.age : foundUser.age,
+                website: req.body.website ? req.body.website : foundUser.website
+            }
+        })
+        .then(user => {
+            console.log('User was updated', user);
+            res.json({ user: user })
+        })
+        .catch(error => {
+            console.log('error', error) 
+            res.json({ message: "Error ocurred, please try again" })
+        })
+    })
+    .catch(error => {
+        console.log('error', error) 
+        res.json({ message: "Error ocurred, please try again" })
+    })
+    
+});
+
 // create a new user called Chris
 // const chris = new User({
 //     name: 'Chris',
@@ -250,6 +309,31 @@ app.delete('/deleteAllByName/:name', (req,res) => {
         if (err) console.log(err);
         console.log('Users deleted!');
     });
+})
+  
+
+app.delete('/posts/:id', (req,res) => {
+    User.findByIdAndRemove(req.params.id, function(err) {
+        if (err) console.log(err);
+        console.log('Users deleted!');
+    })
+    .then(response => {
+        console.log('This one removed', response)
+    })
+})
+
+app.post('/posts/:id/comments', (req, res) => {
+    Post.findById(req.params.id)
+    .then(post => {
+        console.log('This is the post', post);
+        //create comment
+        post.comments.push({
+            header: req.body.header,
+            content: req.body.content
+        })
+        post.save();
+        res.redirect(`/posts/${req.params.id}`)
+    })
 })
   
 app.listen(PORT, () => {
